@@ -32,7 +32,7 @@ class Archive():
         return total_str
 
     def _load_fl(self):
-        fl = open(self._file_info['name'] + '.fl')
+        fl = open(self._file_info['name'] + '.fl', 'rb')
         for line in fl.readlines():
             self._file_info['entries'].append(dict(name = line.split('\\')[-1].rstrip()))
         self._file_info['count'] = len(self._file_info['entries'])
@@ -44,7 +44,8 @@ class Archive():
         return [entry['name'] for entry in self._file_info['entries']]
 
     def _load_fi(self):
-        fi = open(self._file_info['name'] + '.fi').read()
+        fi = open(self._file_info['name'] + '.fi', 'rb').read()
+        print len(fi)
         for i in range(self._file_info['count']):
             (size, offset, lzs) = struct.unpack("<3I", fi[i*12 : (i + 1)*12])
             self._file_info['entries'][i]['act_size'] = size
@@ -64,27 +65,30 @@ class Archive():
     def create_segments(self):
         self.create_subfolder(self._file_info['name'])
 
-        fs = open(self._file_info['name'] + '.fs')
+        fs = open(self._file_info['name'] + '.fs', 'rb')
         for entry in self._file_info['entries']:
-            if entry['lzsed'] == True:
-                fs.seek(entry['offset'])
-                enc_data = fs.read(entry['enc_size'])
-                sub_name = './' + self._file_info['name'] + '/' + entry['name']
-                tmp_name = sub_name + '.tmp'
-                tmp = open(tmp_name, 'wb')
-                tmp.write(enc_data)
-                tmp.close()
+            sub_name = './' + self._file_info['name'] + '/' + entry['name']
+            tmp_name = sub_name + '.tmp'
+
+            if entry['lzsed']:
+                file_name_to_be_written = tmp_name
+            else:
+                if(entry['enc_size'] != entry['act_size']):
+                    print entry
+                assert (entry['enc_size'] == entry['act_size'])
+                file_name_to_be_written = sub_name
+
+            fs.seek(entry['offset'])
+            enc_data = fs.read(entry['enc_size'])
+            tmp = open(file_name_to_be_written, 'wb')
+            tmp.write(enc_data)
+            tmp.close()
+
+            if entry['lzsed']:
                 decode_result = clzs.decode_file(tmp_name, sub_name)
                 assert (decode_result == 0)
                 os.remove(tmp_name)
-            else:
-                fs.seek(entry['offset'])
-                enc_data = fs.read(entry['enc_size'])
-                assert (entry['enc_size'] == entry['act_size'])
-                sub_name = './' + self._file_info['name'] + '/' + entry['name']
-                tmp = open(sub_name, 'wb')
-                tmp.write(enc_data)
-                tmp.close()
+
         fs.close()
 
 class ArchiveFolder():
@@ -94,13 +98,37 @@ class ArchiveFolder():
     def __str__(self):
         return 'find %d archives in the folder %s\n' % (len(self.archive_list), self.archive_list)
 
-    def extract(self):
+    def unpack(self):
         for entry in self.archive_list:
             ar = Archive(entry)
+            print ar
             ar.create_segments()
 
+    def pack(self):
+        pass
+
+
+def __main():
+    if len(sys.argv) != 3:
+        print '--pack <folder>    pack up everything'
+        print '--unpack <folder>  unpack and overwrite everything'
+        return
+    if sys.argv[1] == '--pack':
+        pack = True
+    elif sys.argv[1] == '--unpack':
+        pack = False
+    else:
+        print '--pack <folder>    pack up everything'
+        print '--unpack <folder>  unpack and overwrite everything'
+        return
+    af = ArchiveFolder(sys.argv[2])
+    print af
+    if pack:
+        af.pack()
+    else:
+        af.unpack()
+    print af
+
+
 if __name__ == '__main__':
-    print sys.argv[1]
-    ar = Archive(sys.argv[1])
-    print ar
-    pass
+    __main()
