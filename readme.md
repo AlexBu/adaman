@@ -13,5 +13,5 @@ It is written in Python and it is a small project for practising Python.
 
 Library used:
 
-* lzstring, for the LZS compression method implementation
+* clzs, the LZS compression method implementation on C language for speed
 
