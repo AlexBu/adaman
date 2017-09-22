@@ -55,7 +55,10 @@ class Archive():
     def _load_fs(self):
         previous = os.path.getsize(self._file_info['name'] + '.fs')
         for i in range(self._file_info['count'] - 1, -1, -1):
-            self._file_info['entries'][i]['enc_size'] = previous - self._file_info['entries'][i]['offset']
+            if self._file_info['entries'][i]['lzsed']:
+                self._file_info['entries'][i]['enc_size'] = previous - self._file_info['entries'][i]['offset']
+            else:
+                self._file_info['entries'][i]['enc_size'] = self._file_info['entries'][i]['act_size']
             previous = self._file_info['entries'][i]['offset']
 
     def create_subfolder(self, name):
@@ -67,15 +70,13 @@ class Archive():
 
         fs = open(self._file_info['name'] + '.fs', 'rb')
         for entry in self._file_info['entries']:
-            sub_name = './' + self._file_info['name'] + '/' + entry['name']
+            sub_name = self._file_info['name'] + '/' + entry['name']
             tmp_name = sub_name + '.tmp'
+            print 'extracting %s' % sub_name
 
             if entry['lzsed']:
                 file_name_to_be_written = tmp_name
             else:
-                if(entry['enc_size'] != entry['act_size']):
-                    print entry
-                assert (entry['enc_size'] == entry['act_size'])
                 file_name_to_be_written = sub_name
 
             fs.seek(entry['offset'])
@@ -93,14 +94,15 @@ class Archive():
 
 class ArchiveFolder():
     def __init__(self, dir):
-        self.archive_list = map(lambda one_file: os.path.splitext(os.path.basename(one_file))[0],  glob.glob(os.path.join(dir, '*.fs')))
+        self.archive_dir = os.path.abspath(dir)
+        self.archive_list = map(lambda one_file: os.path.splitext(os.path.basename(one_file))[0],  glob.glob(os.path.join(self.archive_dir, '*.fs')))
 
     def __str__(self):
         return 'find %d archives in the folder %s\n' % (len(self.archive_list), self.archive_list)
 
     def unpack(self):
         for entry in self.archive_list:
-            ar = Archive(entry)
+            ar = Archive(os.path.join(self.archive_dir, entry))
             print ar
             ar.create_segments()
 
@@ -122,12 +124,10 @@ def __main():
         print '--unpack <folder>  unpack and overwrite everything'
         return
     af = ArchiveFolder(sys.argv[2])
-    print af
     if pack:
         af.pack()
     else:
         af.unpack()
-    print af
 
 
 if __name__ == '__main__':
