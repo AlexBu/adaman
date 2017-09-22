@@ -16,7 +16,6 @@ class ArchiveTest(unittest.TestCase):
         pass
 
     def test_list_loading(self):
-        print self.ar
         new_list = self.ar.get_list()
         self.assertEquals(new_list, self.name_list)
 
@@ -36,8 +35,11 @@ class ArchiveFolderTest(unittest.TestCase):
     def test_find_archive(self):
         print self.af
 
-    def test_extract_archive(self):
-        self.af.extract()
+    def test_extract_archives(self):
+        self.af.unpack()
+
+    def test_pack_archives(self):
+        self.af.pack()
 
 if __name__ == '__main__':
     unittest.main()
