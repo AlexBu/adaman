@@ -128,3 +128,11 @@ ENV/
 .mypy_cache/
 
 .idea/
+
+**main/
+**magic/
+**menu/
+**world/
+
+*.bin
+*.lzs
