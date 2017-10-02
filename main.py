@@ -45,7 +45,7 @@ class Archive():
 
     def _load_fi(self):
         fi = open(self._file_info['name'] + '.fi', 'rb').read()
-        print len(fi)
+        print(len(fi))
         for i in range(self._file_info['count']):
             (size, offset, lzs) = struct.unpack("<3I", fi[i*12 : (i + 1)*12])
             self._file_info['entries'][i]['act_size'] = size
@@ -72,7 +72,7 @@ class Archive():
         for entry in self._file_info['entries']:
             sub_name = self._file_info['name'] + '/' + entry['name']
             tmp_name = sub_name + '.tmp'
-            print 'extracting %s' % sub_name
+            print('extracting %s' % sub_name)
 
             if entry['lzsed']:
                 file_name_to_be_written = tmp_name
@@ -101,27 +101,29 @@ class ArchiveFolder():
         return 'find %d archives in the folder %s\n' % (len(self.archive_list), self.archive_list)
 
     def unpack(self):
+        # search archives, unpack all available files
         for entry in self.archive_list:
             ar = Archive(os.path.join(self.archive_dir, entry))
-            print ar
+            print(ar)
             ar.create_segments()
 
     def pack(self):
+        # search archives and their folders, pack all available files
         pass
 
 
 def __main():
     if len(sys.argv) != 3:
-        print '--pack <folder>    pack up everything'
-        print '--unpack <folder>  unpack and overwrite everything'
+        print('--pack <folder>    pack up everything')
+        print('--unpack <folder>  unpack and overwrite everything')
         return
     if sys.argv[1] == '--pack':
         pack = True
     elif sys.argv[1] == '--unpack':
         pack = False
     else:
-        print '--pack <folder>    pack up everything'
-        print '--unpack <folder>  unpack and overwrite everything'
+        print('--pack <folder>    pack up everything')
+        print('--unpack <folder>  unpack and overwrite everything')
         return
     af = ArchiveFolder(sys.argv[2])
     if pack:

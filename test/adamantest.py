@@ -33,7 +33,7 @@ class ArchiveFolderTest(unittest.TestCase):
         pass
 
     def test_find_archive(self):
-        print self.af
+        print(self.af)
 
     def test_extract_archives(self):
         self.af.unpack()
