@@ -135,6 +135,7 @@ ENV/
 **world/
 
 testdata/
+testdata_field/
 
 *.bin
 *.lzs
